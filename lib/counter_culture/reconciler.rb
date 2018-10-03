@@ -70,11 +70,9 @@ module CounterCulture
         # if we're provided a custom set of column names with conditions, use them; just use the
         # column name otherwise
         # which class does this relation ultimately point to? that's where we have to start
-
         scope = relation_class
 
         counter_column_names = column_names || {nil => counter_cache_name}
-
         # iterate over all the possible counter cache column names
         counter_column_names.each do |where, column_name|
           # if the column name is nil, that means those records don't affect
@@ -89,7 +87,7 @@ module CounterCulture
           counts_query = scope.select("#{relation_class_table_name}.#{relation_class.primary_key}, #{relation_class_table_name}.#{relation_reflect(relation).association_primary_key(relation_class)}, #{count_select} AS count, #{relation_class_table_name}.#{column_name}")
 
           # we need to join together tables until we get back to the table this class itself lives in
-          join_clauses(where).each do |join|
+          join_clauses(where, counter.custom_joins).each do |join|
             counts_query = counts_query.joins(join)
           end
 
@@ -164,7 +162,7 @@ module CounterCulture
         @self_table_name
       end
 
-      def join_clauses(where)
+      def join_clauses(where, custom_joins)
         # we need to work our way back from the end-point of the relation to
         # this class itself; make a list of arrays pointing to the
         # second-to-last, third-to-last, etc.
@@ -234,6 +232,9 @@ module CounterCulture
 
               joins_sql += " AND #{target_table_alias}.#{model.discard_column} IS NULL"
             end
+          end
+          if custom_joins
+            joins_sql += " #{custom_joins} "
           end
           joins_sql
         end

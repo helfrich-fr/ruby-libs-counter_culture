@@ -3,7 +3,7 @@ module CounterCulture
     CONFIG_OPTIONS = [ :column_names, :counter_cache_name, :delta_column, :foreign_key_values, :touch, :delta_magnitude]
     ACTIVE_RECORD_VERSION = Gem.loaded_specs["activerecord"].version
 
-    attr_reader :model, :relation, *CONFIG_OPTIONS
+    attr_reader :model, :relation, :custom_joins, *CONFIG_OPTIONS
 
     def initialize(model, relation, options)
       @model = model
@@ -15,6 +15,7 @@ module CounterCulture
 
       @counter_cache_name = options.fetch(:column_name, "#{model.name.tableize}_count")
       @column_names = options[:column_names]
+      @custom_joins = options[:custom_joins]
       @delta_column = options[:delta_column]
       @foreign_key_values = options[:foreign_key_values]
       @touch = options.fetch(:touch, false)
@@ -87,7 +88,6 @@ module CounterCulture
             end
           end
         end
-
         klass.where(primary_key => id_to_change).update_all updates.join(', ')
       end
     end
